@@ -1,10 +1,26 @@
-# MLPro — ML-Powered Malicious Package Detection
+# MLPro: ML-Powered Malicious Package Detection
 
 Detects malicious npm and PyPI packages using XGBoost trained on 17 static signals (code behaviour, metadata, and text). Every prediction includes a SHAP explanation of which signals drove the score.
 
-**The pre-trained model is included — no training required to get started.**
+**The pre-trained model is included, so no training is required to get started.**
 
 ---
+
+## The pipeline
+
+```mermaid
+flowchart LR
+    ING["ingestion, every 15 min<br/>PyPI and npm APIs"]
+    OBJ["MinIO archives<br/>PostgreSQL metadata"]
+    EXT["feature extraction, every 30 min<br/>code · metadata · text"]
+    TRN["training, weekly<br/>XGBoost, monotonic constraints"]
+    REG["MLflow champion registry<br/>promoted only if F1 improves"]
+    API(["REST API<br/>risk score plus SHAP explanation"])
+
+    ING --> OBJ --> EXT --> TRN --> REG --> API
+
+    style API fill:#b4552d,stroke:#b4552d,color:#ffffff
+```
 
 ## Quickstart
 
@@ -65,10 +81,10 @@ curl http://localhost:8000/api/health
 
 | Service | URL | Credentials |
 |---|---|---|
-| REST API | http://localhost:8000 | — |
-| API docs | http://localhost:8000/docs | — |
+| REST API | http://localhost:8000 | |
+| API docs | http://localhost:8000/docs | |
 | Airflow | http://localhost:8080 | admin / admin |
-| MLflow | http://localhost:5000 | — |
+| MLflow | http://localhost:5000 | |
 | Grafana | http://localhost:3000 | admin / admin |
 | MinIO | http://localhost:9001 | minioadmin / minioadmin |
 | Postgres | localhost:5432 | appuser / apppass (db: packages) |
@@ -95,7 +111,7 @@ curl -X POST http://localhost:8000/api/score \
 }
 ```
 
-Risk levels: `low` (< 0.3) · `medium` (0.3–0.6) · `high` (0.6–0.8) · `critical` (≥ 0.8)
+Risk levels: `low` (< 0.3) · `medium` (0.3 to 0.6) · `high` (0.6 to 0.8) · `critical` (>= 0.8)
 
 Fetch a saved report:
 ```bash
@@ -110,7 +126,7 @@ The model was trained on two publicly available datasets:
 
 | Class | Source | Count |
 |---|---|---|
-| malicious | [pypi_malregistry](https://github.com/lxyeternal/pypi_malregistry) — verified malicious packages removed from PyPI (ASE 2023 paper) | ~10,968 |
+| malicious | [pypi_malregistry](https://github.com/lxyeternal/pypi_malregistry), verified malicious packages removed from PyPI (ASE 2023 paper) | ~10,968 |
 | malicious | DataDog malware dataset | ~9,874 |
 | benign | Top 2,000 PyPI packages by downloads | ~1,887 |
 | benign | Top 100 npm packages by downloads | 105 |
@@ -124,7 +140,7 @@ source .venv/bin/activate
 pip install requests psycopg2-binary mlflow xgboost scikit-learn shap pandas numpy boto3
 
 # The stack must already be running (Postgres must be up)
-# Build the dataset — takes 30–60 min
+# Build the dataset, takes 30 to 60 min
 DB_HOST=localhost DB_PORT=5432 DB_NAME=packages DB_USER=appuser DB_PASS=apppass \
 python3 scripts/build_dataset.py
 ```
